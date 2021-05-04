@@ -17,10 +17,11 @@ namespace CalculateDiscountsFP
 
         public static Order GetOrderDiscount(Order order, List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)> rules)
         {
-            var discount = rules
+            var discountsList = rules
                 .Where(r => r.Qualifier(order))
                 .Select(r => r.Calculator(order))
-                .OrderBy(o => o).Take(3).Average();
+                .OrderBy(o => o).Take(3).ToList();
+            var discount = discountsList.Count > 0 ? discountsList.Average() : 0;
 
             order.Discount = discount;
             return order;
@@ -30,7 +31,7 @@ namespace CalculateDiscountsFP
         {
             return new List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)>()
             {
-                (IsEligibleFor0Disc,Calculate0Disc),
+                //(IsEligibleFor0Disc,Calculate0Disc),
                 (IsEligibleFor10Disc,Calculate10Disc),
                 (IsEligibleFor35Disc,Calculate35Disc),
                 (IsEligibleFor50Disc,Calculate50Disc),
