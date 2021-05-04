@@ -10,9 +10,8 @@ namespace CalculateDiscountsFP
     {
         public static void ActualDiscountCalculation()
         {
-            var orders = GetOrders();
-            orders.Select(o => GetOrderDiscount(o, GetRules())).ToList();
-            orders.ForEach(o => o.PrintOrder());
+            GetOrders().Select(o => GetOrderDiscount(o, GetRules())).ToList()
+                .ForEach(o => o.PrintOrder());
         }
 
         public static Order GetOrderDiscount(Order order, List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)> rules)
@@ -21,10 +20,15 @@ namespace CalculateDiscountsFP
                 .Where(r => r.Qualifier(order))
                 .Select(r => r.Calculator(order))
                 .OrderBy(o => o).Take(3).ToList();
-            var discount = discountsList.Count > 0 ? discountsList.Average() : 0;
+            double discount = GetAverage(discountsList);
 
             order.Discount = discount;
             return order;
+        }
+
+        private static double GetAverage(List<double> discountsList)
+        {
+            return discountsList.Count > 0 ? discountsList.Average() : 0;
         }
 
         public static List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)> GetRules()
