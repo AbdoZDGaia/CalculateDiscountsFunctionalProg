@@ -1,13 +1,20 @@
-﻿using System;
+﻿using CalculateDiscountsFP.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CalculateDiscountsFP
 {
     public static class DiscountCalculations
     {
+        private static Func<Order, bool> _isEligibleFor10Disc = o => o.Price * o.Quantity >= 500;
+        private static Func<Order, bool> _isEligibleFor35Disc = o => o.Price * o.Quantity >= 1000;
+        private static Func<Order, bool> _isEligibleFor50Disc = o => o.Price * o.Quantity >= 2000;
+        private static Func<Order, double> _calculate10Disc = o => o.Price * o.Quantity / 10;
+        private static Func<Order, double> _calculate35Disc = o => o.Price * o.Quantity * 35 / 100;
+        private static Func<Order, double> _calculate50Disc = o => o.Price * o.Quantity / 2;
+
+
         public static void ActualDiscountCalculation()
         {
             GetOrders().Select(o => GetOrderDiscount(o, GetRules())).ToList()
@@ -16,70 +23,25 @@ namespace CalculateDiscountsFP
 
         public static Order GetOrderDiscount(Order order, List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)> rules)
         {
-            var discountsList = rules
+            var discount = rules
                 .Where(r => r.Qualifier(order))
                 .Select(r => r.Calculator(order))
-                .OrderBy(o => o).Take(3).ToList();
-            double discount = GetAverage(discountsList);
+                .OrderBy(o => o).Take(3).ToList().GetAverage();
 
             order.Discount = discount;
             return order;
         }
 
-        private static double GetAverage(List<double> discountsList)
-        {
-            return discountsList.Count > 0 ? discountsList.Average() : 0;
-        }
-
         public static List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)> GetRules()
         {
+
+
             return new List<(Func<Order, bool> Qualifier, Func<Order, double> Calculator)>()
             {
-                //(IsEligibleFor0Disc,Calculate0Disc),
-                (IsEligibleFor10Disc,Calculate10Disc),
-                (IsEligibleFor35Disc,Calculate35Disc),
-                (IsEligibleFor50Disc,Calculate50Disc),
+                (_isEligibleFor10Disc,_calculate10Disc),
+                (_isEligibleFor35Disc,_calculate35Disc),
+                (_isEligibleFor50Disc,_calculate50Disc),
             };
-        }
-
-        public static bool IsEligibleFor0Disc(Order order)
-        {
-            return order.Price * order.Quantity < 500;
-        }
-
-        public static double Calculate0Disc(Order order)
-        {
-            return 0;
-        }
-
-        public static bool IsEligibleFor10Disc(Order order)
-        {
-            return order.Price * order.Quantity >= 500;
-        }
-
-        public static double Calculate10Disc(Order order)
-        {
-            return order.Price * order.Quantity / 10;
-        }
-
-        public static bool IsEligibleFor35Disc(Order order)
-        {
-            return order.Price * order.Quantity >= 1000;
-        }
-
-        public static double Calculate35Disc(Order order)
-        {
-            return order.Price * order.Quantity * 35 / 100;
-        }
-
-        public static bool IsEligibleFor50Disc(Order order)
-        {
-            return order.Price * order.Quantity >= 2000;
-        }
-
-        public static double Calculate50Disc(Order order)
-        {
-            return order.Price * order.Quantity / 2;
         }
 
         public static List<Order> GetOrders()
